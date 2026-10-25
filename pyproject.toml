@@ -1,0 +1,29 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "open-responses-conformance"
+version = "0.1.0"
+description = "Semantic conformance checks and a fault-injecting mock server for Open Responses"
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "MIT" }
+authors = [{ name = "Dr. Shriram K Vasudevan" }]
+keywords = ["open-responses", "llm", "api", "conformance", "sse", "streaming", "aaif"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Environment :: Console",
+    "Topic :: Software Development :: Testing",
+]
+
+[project.urls]
+Homepage = "https://github.com/shriramkv/open-responses-conformance"
+Specification = "https://www.openresponses.org/specification"
+
+[project.scripts]
+open-responses-conformance = "open_responses_conformance.cli:main"
+
+[tool.setuptools]
+packages = ["open_responses_conformance"]
