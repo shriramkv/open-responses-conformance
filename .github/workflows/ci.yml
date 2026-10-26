@@ -1,0 +1,48 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.9", "3.10", "3.11", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Unit tests and fault matrix
+        run: python -m unittest discover -s tests -t . -v
+      - name: Demo
+        run: python -m open_responses_conformance demo -q
+      - name: Install and run the console script
+        run: |
+          pip install .
+          open-responses-conformance version
+          open-responses-conformance demo --format markdown >> "$GITHUB_STEP_SUMMARY"
+
+  official-suite:
+    # The clean mock must keep passing the official HTTP compliance tests.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: oven-sh/setup-bun@v2
+      - name: Fetch the official suite
+        run: |
+          git clone --depth 1 https://github.com/openresponses/openresponses.git ../openresponses
+          cd ../openresponses && bun install && bun run generate:zod
+      - name: Clean mock passes the official HTTP tests
+        run: |
+          python -m open_responses_conformance mock --port 8080 &
+          sleep 2
+          cd ../openresponses
+          bun run bin/compliance-test.ts -u http://127.0.0.1:8080/v1 -k x -m mock-model \
+            --filter basic-response,assistant-phase,response-output-phase-schema,streaming-response,system-prompt,tool-calling,image-input,multi-turn,compact-response,compact-missing-model
